@@ -2,116 +2,254 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Image ↔ Base64 Converter</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Base64 Converter</title>
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 40px;
+      margin: 0;
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 220px;
+      background-color: #333;
+      color: white;
+      padding-top: 20px;
+      padding-left: 10px;
+    }
+
+    .sidebar a {
+      display: block;
+      color: white;
+      text-decoration: none;
+      padding: 10px;
+      font-size: 18px;
+      margin: 5px 0;
+    }
+
+    .sidebar a:hover {
+      background-color: #575757;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px;
       background-color: #f9f9f9;
     }
-    h2 {
-      color: #333;
+
+    h1 {
+      text-align: center;
     }
-    .container {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 800px;
-      margin: auto;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+    .section {
+      margin-bottom: 20px;
     }
-    textarea {
+
+    input[type="file"], textarea, button {
       width: 100%;
-      padding: 10px;
-      font-family: monospace;
-      resize: vertical;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-    input[type="file"] {
       margin-top: 10px;
     }
+
     button {
       background-color: #4CAF50;
       border: none;
       color: white;
-      padding: 10px 16px;
+      padding: 10px;
       text-align: center;
-      text-decoration: none;
-      display: inline-block;
-      margin-top: 10px;
       font-size: 16px;
       cursor: pointer;
       border-radius: 5px;
-      margin-right: 10px;
     }
-    .clear-btn {
-      background-color: #f44336;
+
+    button:disabled {
+      background-color: #ccc;
     }
-    img {
-      margin-top: 15px;
-      max-width: 100%;
-      height: auto;
-      border: 1px solid #ddd;
+
+    textarea {
+      padding: 10px;
+      font-family: monospace;
+      resize: vertical;
       border-radius: 4px;
     }
-    .section {
-      margin-bottom: 30px;
+
+    .file-info {
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <h1>Image ↔ Base64 Converter</h1>
-
-  <div class="section">
-    <h2>1. Convert Image to Base64</h2>
-    <input type="file" id="imageInput" accept="image/*">
-    <textarea id="base64Output" rows="8" placeholder="Base64 string will appear here..." readonly></textarea>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <a href="#" onclick="showSection('imageToBase64')">Image to Base64</a>
+    <a href="#" onclick="showSection('base64ToImage')">Base64 to Image</a>
+    <a href="#" onclick="showSection('textToBase64')">Text to Base64</a>
+    <a href="#" onclick="showSection('base64ToText')">Base64 to Text</a>
   </div>
 
-  <div class="section">
-    <h2>2. Convert Base64 to Image</h2>
-    <textarea id="base64Input" rows="8" placeholder="Paste your Base64 string here..."></textarea>
-    <button onclick="decodeBase64()">Display Image</button>
-    <button class="clear-btn" onclick="clearAll()">Clear</button>
-    <img id="outputImage" alt="Decoded Image will appear here">
+  <!-- Main Content -->
+  <div class="main-content">
+    <h1>Base64 Converter</h1>
+
+    <!-- Image to Base64 Section -->
+    <div class="section" id="imageToBase64">
+      <h2>1. Convert Image to Base64</h2>
+      <input type="file" id="imageInput" accept="image/*">
+      <textarea id="base64Output" rows="8" placeholder="Base64 string will appear here..." readonly></textarea>
+      <div id="imageFileInfo" class="file-info"></div>
+      <button onclick="copyBase64()">Copy</button>
+      <button onclick="clearImageToBase64()">Clear</button>
+    </div>
+
+    <!-- Base64 to Image Section -->
+    <div class="section" id="base64ToImage" style="display:none;">
+      <h2>2. Convert Base64 to Image</h2>
+      <textarea id="base64Input" rows="8" placeholder="Paste your Base64 string here..."></textarea>
+      <button onclick="decodeBase64()">Display Image</button>
+      <img id="outputImage" alt="Decoded Image will appear here">
+      <div id="base64FileInfo" class="file-info"></div>
+      <button onclick="clearBase64ToImage()">Clear</button>
+    </div>
+
+    <!-- Text to Base64 Section -->
+    <div class="section" id="textToBase64" style="display:none;">
+      <h2>3. Convert Text to Base64</h2>
+      <textarea id="textInput" rows="8" placeholder="Enter text here..."></textarea>
+      <button onclick="textToBase64()">Convert</button>
+      <textarea id="textBase64Output" rows="8" placeholder="Base64 output will appear here..." readonly></textarea>
+      <button onclick="clearTextToBase64()">Clear</button>
+    </div>
+
+    <!-- Base64 to Text Section -->
+    <div class="section" id="base64ToText" style="display:none;">
+      <h2>4. Convert Base64 to Text</h2>
+      <textarea id="base64TextInput" rows="8" placeholder="Paste your Base64 string here..."></textarea>
+      <button onclick="base64ToText()">Convert</button>
+      <textarea id="base64TextOutput" rows="8" placeholder="Decoded text will appear here..." readonly></textarea>
+      <button onclick="clearBase64ToText()">Clear</button>
+    </div>
   </div>
-</div>
 
-<script>
-  // Convert image to Base64 (raw, no metadata)
-  document.getElementById('imageInput').addEventListener('change', function () {
-    const file = this.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = function () {
-        const base64Only = reader.result.split(',')[1];
-        document.getElementById('base64Output').value = base64Only;
-      };
-      reader.readAsDataURL(file);
+  <script>
+    const imageInput = document.getElementById('imageInput');
+    const base64Output = document.getElementById('base64Output');
+    const base64Input = document.getElementById('base64Input');
+    const outputImage = document.getElementById('outputImage');
+    const base64TextInput = document.getElementById('base64TextInput');
+    const base64TextOutput = document.getElementById('base64TextOutput');
+    const textInput = document.getElementById('textInput');
+    const textBase64Output = document.getElementById('textBase64Output');
+    const imageFileInfo = document.getElementById('imageFileInfo');
+    const base64FileInfo = document.getElementById('base64FileInfo');
+
+    // Show the selected section
+    function showSection(section) {
+      const sections = ['imageToBase64', 'base64ToImage', 'textToBase64', 'base64ToText'];
+      sections.forEach(s => document.getElementById(s).style.display = 'none');
+      document.getElementById(section).style.display = 'block';
     }
-  });
 
-  // Convert Base64 to image
-  function decodeBase64() {
-    const base64Str = document.getElementById('base64Input').value.trim();
-    if (base64Str) {
-      document.getElementById('outputImage').src = 'data:image/jpeg;base64,' + base64Str;
-    } else {
-      alert('Please paste a valid Base64 string.');
+    // Image to Base64
+    imageInput.addEventListener('change', function () {
+      const file = imageInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          const base64 = reader.result.split(',')[1];
+          base64Output.value = base64;
+
+          // Create an image to load the file and get resolution
+          const img = new Image();
+          img.onload = function () {
+            imageFileInfo.innerHTML = `File Size: ${(file.size / 1024).toFixed(2)} KB<br>Resolution: ${img.width}x${img.height}`;
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    // Base64 to Image
+    function decodeBase64() {
+      const base64Str = base64Input.value.trim();
+      if (base64Str) {
+        outputImage.src = `data:image/jpeg;base64,${base64Str}`;
+        const img = new Image();
+        img.onload = function () {
+          // Calculate Base64 file size
+          const base64Size = Math.round((base64Str.length * 3 / 4) - (base64Str.indexOf('=') > -1 ? (base64Str.length - base64Str.indexOf('=') + 1) : 0));
+          base64FileInfo.innerHTML = `File Size: ${(base64Size / 1024).toFixed(2)} KB<br>Resolution: ${img.width}x${img.height}`;
+        };
+        img.src = `data:image/jpeg;base64,${base64Str}`;
+      } else {
+        alert('Please paste a valid Base64 string.');
+      }
     }
-  }
 
-  // Clear everything
-  function clearAll() {
-    document.getElementById('imageInput').value = "";       // Clears file input
-    document.getElementById('base64Output').value = "";     // Clears Base64 output
-    document.getElementById('base64Input').value = "";      // Clears Base64 input
-    document.getElementById('outputImage').src = "";        // Clears decoded image
-  }
-</script>
+    // Text to Base64
+    function textToBase64() {
+      const text = textInput.value.trim();
+      if (text) {
+        textBase64Output.value = btoa(unescape(encodeURIComponent(text)));
+      } else {
+        alert('Please enter some text to convert.');
+      }
+    }
 
+    // Base64 to Text
+    function base64ToText() {
+      const base64 = base64TextInput.value.trim();
+      if (base64) {
+        try {
+          const decodedText = decodeURIComponent(escape(atob(base64)));
+          base64TextOutput.value = decodedText;
+        } catch (error) {
+          alert("Invalid Base64 string.");
+        }
+      } else {
+        alert("Please enter Base64 string to decode.");
+      }
+    }
+
+    // Clear Functions
+    function clearImageToBase64() {
+      base64Output.value = '';
+      imageFileInfo.innerHTML = '';
+    }
+
+    function clearBase64ToImage() {
+      base64Input.value = '';
+      outputImage.src = '';
+      base64FileInfo.innerHTML = '';
+    }
+
+    function clearTextToBase64() {
+      textInput.value = '';
+      textBase64Output.value = '';
+    }
+
+    function clearBase64ToText() {
+      base64TextInput.value = '';
+      base64TextOutput.value = '';
+    }
+
+    // Copy to Clipboard
+    function copyBase64() {
+      const range = document.createRange();
+      range.selectNode(base64Output);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(range);
+      document.execCommand('copy');
+    }
+  </script>
 </body>
 </html>
